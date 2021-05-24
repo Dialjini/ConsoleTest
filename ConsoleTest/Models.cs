@@ -56,6 +56,7 @@ namespace ConsoleTest
     public class PartTwo
     {
         public string address { get; set; }
+        public string name { get; set; }
         public List<Lot> lot { get; set; }
         public PartTwo()
         {
@@ -70,15 +71,16 @@ namespace ConsoleTest
         public string name { get; set; }
         public string status { get; set; }
         public string provider { get; set; }
-        public float maxPrice { get; set; }
+        public double maxPrice { get; set; }
         public DateTime publicationDate { get; set; }
         public DateTime endDate { get; set; }
         public string address { get; set; }
         public List<Lot> lot { get; set; }
-        public List<Invdata> docs { get; set; }
+        public List<PartThree> docs { get; set; }
 
         public OutputData(int id, string name, string status, string provider,
-            float maxPrice, DateTime publicationDate, DateTime endDate, string address)
+            double maxPrice, DateTime publicationDate, DateTime endDate, string address,
+            List<Lot> lot, List<PartThree> docs)
         {
             this.id = id;
             this.name = name;
@@ -88,10 +90,46 @@ namespace ConsoleTest
             this.publicationDate = publicationDate;
             this.endDate = endDate;
             this.address = address;
-            this.lot = new List<Lot>();
-            this.docs = new List<Invdata>();
+            this.lot = lot;
+            this.docs = docs;
         }
 
+        public void PrintResult(OutputData data)
+        {
+            data.publicationDate += new TimeSpan(4, 0, 0); // В json не указано UTC
+            data.endDate += new TimeSpan(4, 0, 0); // Предполагаю что это МСК и прибавляю разницу с НСО
+
+            string docs = "", lots = "";
+            int i = 0;
+            foreach(var doc in data.docs) // Заполняем документы
+            {
+                i++;
+                docs += String.Format("{0}. {1}\n    URL: {2}\n ", i, doc.FileName, doc.Url);
+            }
+
+            i = 0;
+            foreach(var lot in data.lot) // Заполняем лоты
+            {
+                i++;
+                lots += String.Format("{0}. Наименование: {1}\n    Единица измерения: {2}\n    Количество:{3}\n    Цена за единицу:{4}\n ",
+                                        i, lot.name, lot.unit, lot.count, lot.price);
+            }
+
+            // Строка для приятного глазу вывода на экран
+            string stringData = String.Format((" Номер тендера: {0}\n\n" +
+                                               " Наименование тендера: {1}\n\n" +
+                                               " Текущий статус: {2}\n\n" +
+                                               " Наименование заказчика: {3}\n\n" +
+                                               " НМЦ(начальная максимальная цена): {4}\n\n" +
+                                               " Дата публикации(НСО): {5}\n\n" +
+                                               " Дата окончания подачи заявок(НСО): {6}\n\n" +
+                                               " Место поставки: {7}\n\n" +
+                                               " Список позиций лота:\n {8}\n" +
+                                               " Список документов:\n {9}\n"), 
+                                               data.id, data.name, data.status, data.provider, data.maxPrice, data.publicationDate, data.endDate,
+                                               data.address, lots, docs);
+            Console.WriteLine(stringData);
+        }
 
     }
 }
