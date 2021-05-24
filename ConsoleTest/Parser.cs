@@ -7,22 +7,32 @@ namespace ConsoleTest
 {
     public class Parser
     {
-        public async Task Parse(string data)
+        public async Task<PartTwo> Parse(string data)
         {
             var config = Configuration.Default;
             var context = BrowsingContext.New(config);
-            //var document = await context.OpenAsync(req => req.Content(data));
-            //var blueListItemsCssSelector = document.QuerySelectorAll("class.informationAboutCustomer");
+
             var document = await context.OpenAsync(req => req.Content(data));
+            PartTwo result = new PartTwo();
+            var addressSelector = document.QuerySelectorAll("div.informationAboutCustomer__informationPurchase");
 
-            //Do something with LINQ
-            var blueListItemsCssSelector = document.QuerySelectorAll("div.informationAboutCustomer__informationPurchase");
-
-            Console.WriteLine("Serializing the (original) document:");
-            foreach (var item in blueListItemsCssSelector)
+            foreach (var item in addressSelector)
             {
-                Console.WriteLine(item.TextContent);
+                result.address = item.TextContent.Split("Место поставки:\n")[1].Split("\n")[0].Trim(' ');
             }
+
+            var lotSelector = document.QuerySelectorAll("div.outputResults__oneResult");
+            foreach (var item in lotSelector)
+            {
+                Lot lot = new Lot();
+
+                lot.name = item.TextContent.Split("Наименование товара, работ, услуг: ")[1].Split("\n")[0];
+                lot.price = float.Parse(item.TextContent.Split("Стоимость единицы продукции ( в т.ч. НДС при наличии): ")[1].Split("\n")[0]);
+                lot.unit = item.TextContent.Split("Единицы измерения: ")[1].Split("\n")[0];
+                lot.count = float.Parse(item.TextContent.Split("Количество: ")[1].Split("\n")[0]);
+                result.lot.Add(lot);
+            }
+            return result;
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Net;
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace ConsoleTest
 {
@@ -20,16 +22,44 @@ namespace ConsoleTest
                 return Controller();                                      // и возвращаем получившееся число.  
             }
         }
-        static void Main(string[] args)
+        static PartOne PtOne(int tenderId)
         {
-            int tenderId = Controller(); // Вызываем контроллер
+            PartOne pt1 = new PartOne();
+            using (var webClient = new WebClient())
+            {
+                // Выполняем запрос по адресу и получаем ответ в виде строки
+                string data = String.Format("page=1&itemsPerPage=10&Id={0}", tenderId);
+                webClient.Headers[HttpRequestHeader.ContentType] = "application/x-www-form-urlencoded"; // Отправляем POST запрос и приводим к классу PartOne
+                var reply = JsonSerializer.Deserialize<PartOne>(webClient.UploadString("https://api.market.mosreg.ru/api/Trade/GetTradesForParticipantOrAnonymous", data));
+                Console.WriteLine(reply);
+
+            }
+            return pt1;
+        }
+
+        static PartTwo PtTwo(int tenderId)
+        {
+            PartTwo pt2 = new PartTwo();
             using (var webClient = new WebClient())
             {
                 // Выполняем запрос по адресу и получаем ответ в виде строки
                 var response = webClient.DownloadString(String.Format("https://market.mosreg.ru/Trade/ViewTrade/{0}", tenderId));
                 Parser parser = new Parser();
-                parser.Parse(response);
+                pt2 = parser.Parse(response).GetAwaiter().GetResult();
             }
+
+            return pt2; 
+        }
+
+
+        static void Main(string[] args)
+        {
+            int tenderId = Controller(); // Вызываем контроллер
+            // Part 1
+            PartOne pt1 = PtOne(tenderId);
+            // Part 2
+            PartTwo pt2 = PtTwo(tenderId);
+            
         }
     }
 }
